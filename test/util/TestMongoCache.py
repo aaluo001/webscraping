@@ -17,6 +17,12 @@ URL = 'http://www.pytest.com/'
 DOMAIN = urlparse(URL).netloc
 MAX_NUM = 11
 
+MONGO_CONF = { \
+    'host': 'localhost',
+    'port': 27017,
+    'db':   'pywork',
+}
+
 
 class TestMongoCache(unittest.TestCase):
 
@@ -28,7 +34,7 @@ class TestMongoCache(unittest.TestCase):
 
 
     def test_SetItemAndGetItem(self):
-        mc = MongoCache()
+        mc = MongoCache(MONGO_CONF)
         mc.delete(DOMAIN)
 
         vUrl = URL + '{}'
@@ -41,7 +47,7 @@ class TestMongoCache(unittest.TestCase):
 
 
     def test_DoseNotExists(self):
-        mc = MongoCache()
+        mc = MongoCache(MONGO_CONF)
         mc.delete(DOMAIN)
 
         try:
@@ -51,7 +57,7 @@ class TestMongoCache(unittest.TestCase):
 
 
     def test_HasExpired(self):
-        mc = MongoCache(timedelta(seconds=1))
+        mc = MongoCache(MONGO_CONF, timedelta(seconds=1))
         mc.delete(DOMAIN)
 
         mc[URL] = 'TestContent'

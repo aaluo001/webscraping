@@ -16,18 +16,20 @@ from util.db.MysqlDBApi import MysqlDBApi as DBApi
 from util.db.MysqlDBApi import DBApiError
 
 
+MYSQL_CONF = {
+    'host':    'localhost',
+    'port':    3306,
+    'user':    'Pywork',
+    'passwd':  'Pywork2019+',
+    'db':      'pywork',
+    'charset': 'UTF8',
+}
+
+
 class TestMysqlDBApi(unittest.TestCase):
 
     def setUp(self):
-        vMysqlConf = {
-            'host':    'localhost',
-            'port':    3306,
-            'user':    'Pywork',
-            'passwd':  'Pywork2019+',
-            'db':      'pywork',
-            'charset': 'UTF8',
-        }
-        self.vDB = DBApi(vMysqlConf)
+        self.vDB = DBApi(MYSQL_CONF)
 
         try:
             self.vDB.connect()
