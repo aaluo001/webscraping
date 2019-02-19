@@ -12,17 +12,15 @@ from urllib.parse import urlparse
 
 from pymongo import MongoClient
 from bson.binary import Binary
-
-from Setting import MONGO_CONF
 from util.cache.BaseCache import BaseCache
 
 
 class MongoCache(BaseCache):
-    def __init__(self, vExpire=timedelta(days=180)):
+    def __init__(self, vMongoConf, vExpire=timedelta(days=180)):
         super().__init__(vExpire)
         
-        self.vClient = MongoClient(host=MONGO_CONF['host'], port=MONGO_CONF['port'])
-        self.vDB = self.vClient[MONGO_CONF['db']]
+        self.vClient = MongoClient(host=vMongoConf['host'], port=vMongoConf['port'])
+        self.vDB = self.vClient[vMongoConf['db']]
         self.vCache = self.vDB['mongocache']
 
 
