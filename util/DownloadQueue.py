@@ -152,14 +152,13 @@ class DownloadQueue:
             vQuery = [OUTSTANDING, ]
 
             if (vUrl):
-                # 重置链接
                 vSQL += 'url=%s'
                 vQuery.append(vUrl)
-
             elif (vDomain):
-                # 重置所属该域名的所有链接
                 vSQL += 'domain=%s'
                 vQuery.append(vDomain)
+            else:
+                raise TypeError('参数vUrl和vDomain必须且只能指定其中一个！')
 
             self.vDB.execute(vSQL, *vQuery)
             self.vDB.commit()

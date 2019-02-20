@@ -34,9 +34,7 @@ class TestSqliteDBApi(unittest.TestCase):
                 CREATE TABLE pytest(id CHAR(3), update_ts DATETIME, PRIMARY KEY(id))
             ''')
         except DBApiError:
-            msgInf('Table pytest has aleady exist.')
-        else:
-            msgInf('Created table pytest.')
+            pass
         finally:
             self.vDB.close()
 
@@ -45,7 +43,7 @@ class TestSqliteDBApi(unittest.TestCase):
         os.remove(self.vDBFile)
 
 
-    def test_main(self):
+    def test_Main(self):
         # 确保数据库连接成功
         self.assertTrue( \
             os.path.exists(self.vDBFile), \

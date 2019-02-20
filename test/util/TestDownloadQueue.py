@@ -66,7 +66,7 @@ class TestDownloadQueue(unittest.TestCase):
             self.vDB.close()
 
 
-    def test_FunctionPush(self):
+    def test_Push(self):
         vRecordList = self.getRecordList()
         self.assertEqual(len(vRecordList), MAX_RECORD * 3)
 
@@ -93,25 +93,44 @@ class TestDownloadQueue(unittest.TestCase):
             self.assertEqual(vRecord[5], OUTSTANDING)
 
 
-    def test_FunctionPop(self):
+    def test_Pop(self):
         pass
-        
-        
-    def test_FunctionComplete(self):
-        pass
-        
 
-    def test_FunctionReset(self):
+
+    def test_Complete(self):
+        vRecordList = self.getRecordList()
+        vTestUrls = [ vRecord[0] for vRecord in vRecordList[5:11] ]
+        for vUrl in vTestUrls:
+            self.vQueue.complete(vUrl)
+
+        vRecordList = self.getRecordList()
+        for vRecord in vRecordList:
+            if (vRecord[0] in vTestUrls):
+                self.assertEqual(vRecord[5], COMPLETE)
+            else:
+                self.assertEqual(vRecord[5], OUTSTANDING)
+
+
+    def test_ResetByUrl(self):
         pass
-        
-        
-    def test_FunctionDeleteByDomain(self):
+
+    def test_ResetByDomain(self):
+        pass
+
+    def test_ResetAll(self):
+        try:
+            self.vQueue.reset()
+        except TypeError as e:
+            self.assertEqual(str(e), '参数vUrl和vDomain必须且只能指定其中一个！')
+
+
+    def test_DeleteByDomain(self):
         self.vQueue.delete(DOMAIN3)
-        vRecordList = self.getRecordList(DOMAIN3)
-        self.assertEqual(len(vRecordList), 0)
         vRecordList = self.getRecordList(DOMAIN1)
         self.assertEqual(len(vRecordList), MAX_RECORD)
-        
+        vRecordList = self.getRecordList(DOMAIN3)
+        self.assertEqual(len(vRecordList), 0)
+
         self.vQueue.delete(DOMAIN1)
         vRecordList = self.getRecordList(DOMAIN1)
         self.assertEqual(len(vRecordList), 0)
@@ -123,7 +142,7 @@ class TestDownloadQueue(unittest.TestCase):
         self.assertEqual(len(vRecordList), 0)
 
 
-    def test_FunctionDeleteAll(self):
+    def test_DeleteAll(self):
         self.vQueue.delete()
         vRecordList = self.getRecordList()
         self.assertEqual(len(vRecordList), 0)

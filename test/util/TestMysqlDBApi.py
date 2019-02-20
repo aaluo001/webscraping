@@ -31,33 +31,22 @@ class TestMysqlDBApi(unittest.TestCase):
     def setUp(self):
         self.vDB = DBApi(MYSQL_CONF)
 
-        try:
-            self.vDB.connect()
-        except DBApiError as e:
-            msgExp(e)
-            self.vDB = None
-            return
-
+        # 新建测试表
+        self.vDB.connect()
         try:
             self.vDB.execute('''
                 CREATE TABLE pytest(id CHAR(3), update_ts DATETIME, PRIMARY KEY(id))
             ''')
         except DBApiError:
-            msgInf('Table pytest has aleady exist.')
-        else:
-            msgInf('Created table pytest.')
+            pass
         finally:
             self.vDB.close()
-
 
     def tearDown(self):
         pass
 
 
-    def test_main(self):
-        # 确保数据库连接成功
-        self.assertIsNotNone(self.vDB)
-        
+    def test_Main(self):
         self.vDB.connect()
         try:
             # Lock Table
