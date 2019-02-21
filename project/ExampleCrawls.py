@@ -6,6 +6,7 @@
 # Copyright 2018 Pywork by TangJianwei.
 # All rights reserved. 
 #----------------------------------------
+from Setting import MONGO_CONF
 from util.Spider import Spider
 from util.cache.MongoCache import MongoCache
 from util.project.BaseProject import BaseProject
@@ -18,7 +19,7 @@ class ExampleCrawls(BaseProject):
     # Ö÷´¦Àí
     def main(self):
         Spider(vUrl=r'http://example.webscraping.com', \
-          vMaxDepth=None, vMaxDownload=5, vCache=None, \
+          vMaxDepth=None, vMaxDownload=None, vCache=MongoCache(MONGO_CONF), \
           vAllowRules=[r'/view', r'/index',], \
           vDisallowRules=[r'/trap', r'/user', ] \
         ).run()

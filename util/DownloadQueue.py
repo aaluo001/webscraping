@@ -121,7 +121,7 @@ class DownloadQueue:
                 )
                 db.commit()
                 db.unlock()
-                raise IndexError('Empty DownloadQueue.')
+                raise IndexError('Empty Queue.')
 
         finally:
             db.close()

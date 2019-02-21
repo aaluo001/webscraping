@@ -194,7 +194,7 @@ class Spider:
                     # Get cache file
                     try:
                         vHtml = self.vCache[vUrl]
-                    except CacheError as e:
+                    except IndexError as e:
                         # The cache file dose not exist,
                         # Or has expired
                         pass
