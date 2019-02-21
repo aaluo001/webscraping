@@ -29,58 +29,53 @@ MYSQL_CONF = {
 class TestMysqlDBApi(unittest.TestCase):
 
     def setUp(self):
-        self.vDB = DBApi(MYSQL_CONF)
-
-        # 新建测试表
-        self.vDB.connect()
+        db = DBApi(MYSQL_CONF)
         try:
-            self.vDB.execute('''
+            db.execute('''
                 CREATE TABLE pytest(id CHAR(3), update_ts DATETIME, PRIMARY KEY(id))
             ''')
-        except DBApiError:
-            pass
-        finally:
-            self.vDB.close()
+        except DBApiError: pass
+        finally: db.close()
 
     def tearDown(self):
         pass
 
 
     def test_Main(self):
-        self.vDB.connect()
+        db = DBApi(MYSQL_CONF)
         try:
             # Lock Table
-            self.vDB.lock('pytest')
+            db.lock('pytest')
             msgInf('Table pytest is locked.')
             
             vDeleteSQL = 'DELETE FROM pytest'
             vSelectSQL = 'SELECT * FROM pytest'
             
             # --- Delete Data ---
-            self.vDB.execute(vDeleteSQL)
-            self.vDB.commit()
+            db.execute(vDeleteSQL)
+            db.commit()
             time.sleep(2)
             
             # --- Select Data ---
-            self.vDB.execute(vSelectSQL)
+            db.execute(vSelectSQL)
             # 确保取得数据的件数是对的
-            self.assertEqual(len(self.vDB.fetchall()), 0)
+            self.assertEqual(len(db.fetchall()), 0)
 
 
             # --- Insert Data ---
             for i in range(5):
-                self.vDB.execute( \
+                db.execute( \
                     'INSERT INTO pytest VALUES(%s,%s)', \
                     '{:03d}'.format(i+1), \
                     datetime.now() \
                 )
                 time.sleep(2)
-            self.vDB.commit()
+            db.commit()
 
 
             # --- Select Data ---
-            self.vDB.execute(vSelectSQL)
-            vRecordList = self.vDB.fetchall()
+            db.execute(vSelectSQL)
+            vRecordList = db.fetchall()
             
             # 确保取得数据的件数是对的
             self.assertEqual(len(vRecordList), 5)
@@ -92,21 +87,21 @@ class TestMysqlDBApi(unittest.TestCase):
 
 
             # --- Delete Data ---
-            self.vDB.execute(vDeleteSQL)
-            self.vDB.commit()
+            db.execute(vDeleteSQL)
+            db.commit()
             time.sleep(2)
 
             # --- Select Data ---
-            self.vDB.execute(vSelectSQL)
+            db.execute(vSelectSQL)
             # 确保取得数据的件数是对的
-            self.assertEqual(len(self.vDB.fetchall()), 0)
+            self.assertEqual(len(db.fetchall()), 0)
 
             # Unlock Table
-            self.vDB.unlock()
+            db.unlock()
             msgInf('Table pytest is unlocked.')
 
         finally:
-            self.vDB.close()
+            db.close()
 
 
 # 执行

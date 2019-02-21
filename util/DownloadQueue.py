@@ -37,16 +37,20 @@ class DownloadQueue:
         控制多个进程同时下载的队列。
         适合多线程处理。
     '''
-    def __init__(self, vMysqlConf):
-        # 数据库
-        self.vDB = DBApi(vMysqlConf)
+    def __init__(self, vDBApiConf):
+        self.vDBApiConf = vDBApiConf
+        self.initTable()
 
+    def getDBApi(self):
+        return DBApi(self.vDBApiConf)
+
+    def initTable(self):
         # 新建表
-        self.vDB.connect()
-        try: self.vDB.execute(SQL_CREATE_TABLE)
+        db = self.getDBApi()
+        try: db.execute(SQL_CREATE_TABLE)
         # 表已经存在时，不作处理
         except DBApiError: pass
-        finally: self.vDB.close()
+        finally: db.close()
 
 
     def push(self, vQueryList):
@@ -55,26 +59,23 @@ class DownloadQueue:
             否则就插入新的记录。
             vQuery: vUrl, vDomain, vDepth, vOldUrl, vOldList
         '''
-        self.vDB.connect()
+        db = self.getDBApi()
         try:
-            self.vDB.lock('dlqueue')
-            
+            db.lock('dlqueue')
             # 插入数据
             vUpdateTS = datetime.now()
             for vQuery in vQueryList:
                 try:
-                    self.vDB.execute(\
+                    db.execute(\
                         'INSERT INTO dlqueue VALUES(%s, %s, %s, %s, %s, %s, %s)', \
                         *vQuery, OUTSTANDING, vUpdateTS \
                     )
                 # 数据已经存在时，不作处理
                 except DBApiError: pass
-            
-            self.vDB.commit()
-            self.vDB.unlock()
-
+            db.commit()
+            db.unlock()
         finally:
-            self.vDB.close()
+            db.close()
 
 
     def pop(self, vMaxDepth=None, vDomain=None):
@@ -83,9 +84,9 @@ class DownloadQueue:
             如果没有发现未处理的记录，就检查处理中的数据是否超时。
             如果超时，就变为未处理的状态。
         '''
-        self.vDB.connect()
+        db = self.getDBApi()
         try:
-            self.vDB.lock('dlqueue')
+            db.lock('dlqueue')
             
             # 取得一条未处理的数据
             vSQL = 'SELECT url, depth FROM dlqueue WHERE status=%s '
@@ -99,54 +100,54 @@ class DownloadQueue:
                 vSQL += 'and domain=%s '
                 vQuery.append(vDomain)
 
-            self.vDB.execute(vSQL, *vQuery)
-            vRecord = self.vDB.fetchone()
+            db.execute(vSQL, *vQuery)
+            vRecord = db.fetchone()
             if (vRecord):
                 vUrl, vDepth = vRecord
                 # 将该数据的状态变为处理中
-                self.vDB.execute(\
+                db.execute(\
                     'UPDATE dlqueue SET status=%s, update_ts=%s WHERE url=%s', \
                     PROCESSING, datetime.now(), vUrl \
                 )
-                self.vDB.commit()
-                self.vDB.unlock()
+                db.commit()
+                db.unlock()
                 return (vUrl, vDepth)
     
             else:
                 # 检查是否有超时的数据(直接更新)
-                self.vDB.execute(\
+                db.execute(\
                     'UPDATE dlqueue SET status=%s WHERE status=%s AND update_ts<%s', \
                     OUTSTANDING, PROCESSING, datetime.now()-timedelta(seconds=PROCESS_TIMEOUT) \
                 )
-                self.vDB.commit()
-                self.vDB.unlock()
+                db.commit()
+                db.unlock()
                 raise IndexError('Empty DownloadQueue.')
 
         finally:
-            self.vDB.close()
+            db.close()
 
 
     def complete(self, vUrl):
         ''' 完成下载，将其状态变为处理完成(COMPLETE)
         '''
-        self.vDB.connect()
+        db = self.getDBApi()
         try:
-            self.vDB.lock('dlqueue')
-            self.vDB.execute(\
+            db.lock('dlqueue')
+            db.execute(\
                 'UPDATE dlqueue SET status=%s WHERE url=%s', \
                 COMPLETE, vUrl \
             )
-            self.vDB.commit()
-            self.vDB.unlock()
+            db.commit()
+            db.unlock()
         finally:
-            self.vDB.close()
+            db.close()
 
 
     def reset(self, vUrl=None, vDomain=None):
         ''' 重新下载
             注意：在多个进程同时抓取时，必须禁用该功能。
         '''
-        self.vDB.connect()
+        db = self.getDBApi()
         try:
             vSQL = 'UPDATE dlqueue SET status=%s WHERE '
             vQuery = [OUTSTANDING, ]
@@ -160,11 +161,11 @@ class DownloadQueue:
             else:
                 raise TypeError('参数vUrl和vDomain必须且只能指定其中一个！')
 
-            self.vDB.execute(vSQL, *vQuery)
-            self.vDB.commit()
+            db.execute(vSQL, *vQuery)
+            db.commit()
 
         finally:
-            self.vDB.close()
+            db.close()
 
 
     def delete(self, vDomain=None):
@@ -174,20 +175,17 @@ class DownloadQueue:
                 DQ().delete()
                 DQ().delete(vDomain)
         '''
-        self.vDB.connect()
+        db = self.getDBApi()
         try:
-            self.vDB.lock('dlqueue')
-
+            db.lock('dlqueue')
             vSQL = 'DELETE FROM dlqueue '
             vQuery = []
             if (vDomain):
                 vSQL += 'where domain=%s'
                 vQuery.append(vDomain)
-            self.vDB.execute(vSQL, *vQuery)
-
-            self.vDB.commit()
-            self.vDB.unlock()
-
+            db.execute(vSQL, *vQuery)
+            db.commit()
+            db.unlock()
         finally:
-            self.vDB.close()
+            db.close()
 

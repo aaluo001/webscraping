@@ -9,13 +9,10 @@
 import unittest
 import time
 
-from util.DownloadQueue import DownloadQueue as DQ
+from util.DownloadQueue import DownloadQueue
 from util.DownloadQueue import OUTSTANDING
 from util.DownloadQueue import PROCESSING
 from util.DownloadQueue import COMPLETE
-
-from util.db.MysqlDBApi import MysqlDBApi as DBApi
-from util.db.MysqlDBApi import DBApiError
 
 
 URL1 = 'http://www.pytest01.com/{}'
@@ -41,14 +38,13 @@ MYSQL_CONF = {
 class TestDownloadQueue(unittest.TestCase):
 
     def setUp(self):
-        self.vDB = DBApi(MYSQL_CONF)
-        self.vQueue = DQ(MYSQL_CONF)
-        self.vQueue.push([ (URL1.format(i), DOMAIN1, 1, None, None) for i in range(MAX_RECORD) ])
-        self.vQueue.push([ (URL2.format(i), DOMAIN2, 2, 'http://test.com', '/this') for i in range(MAX_RECORD) ])
-        self.vQueue.push([ (URL3.format(i), DOMAIN3, 3, None, None) for i in range(MAX_RECORD) ])
+        self.vDQueue = DownloadQueue(MYSQL_CONF)
+        self.vDQueue.push([ (URL1.format(i), DOMAIN1, 1, None, None) for i in range(MAX_RECORD) ])
+        self.vDQueue.push([ (URL2.format(i), DOMAIN2, 2, 'http://test.com', '/this') for i in range(MAX_RECORD) ])
+        self.vDQueue.push([ (URL3.format(i), DOMAIN3, 3, None, None) for i in range(MAX_RECORD) ])
 
     def tearDown(self):
-        self.vQueue.delete()
+        self.vDQueue.delete()
 
     def getRecordList(self, vDomain=None):
         vSQL = 'SELECT * FROM dlqueue '
@@ -58,12 +54,12 @@ class TestDownloadQueue(unittest.TestCase):
             vSQL += 'WHERE domain=%s'
             vQuery.append(vDomain)
 
-        self.vDB.connect()
+        db = self.vDQueue.getDBApi()
         try:
-            self.vDB.execute(vSQL, *vQuery)
-            return self.vDB.fetchall()
+            db.execute(vSQL, *vQuery)
+            return db.fetchall()
         finally:
-            self.vDB.close()
+            db.close()
 
 
     def test_Push(self):
@@ -101,7 +97,7 @@ class TestDownloadQueue(unittest.TestCase):
         vRecordList = self.getRecordList()
         vTestUrls = [ vRecord[0] for vRecord in vRecordList[5:11] ]
         for vUrl in vTestUrls:
-            self.vQueue.complete(vUrl)
+            self.vDQueue.complete(vUrl)
 
         vRecordList = self.getRecordList()
         for vRecord in vRecordList:
@@ -119,31 +115,31 @@ class TestDownloadQueue(unittest.TestCase):
 
     def test_ResetAll(self):
         try:
-            self.vQueue.reset()
+            self.vDQueue.reset()
         except TypeError as e:
             self.assertEqual(str(e), '参数vUrl和vDomain必须且只能指定其中一个！')
 
 
     def test_DeleteByDomain(self):
-        self.vQueue.delete(DOMAIN3)
+        self.vDQueue.delete(DOMAIN3)
         vRecordList = self.getRecordList(DOMAIN1)
         self.assertEqual(len(vRecordList), MAX_RECORD)
         vRecordList = self.getRecordList(DOMAIN3)
         self.assertEqual(len(vRecordList), 0)
 
-        self.vQueue.delete(DOMAIN1)
+        self.vDQueue.delete(DOMAIN1)
         vRecordList = self.getRecordList(DOMAIN1)
         self.assertEqual(len(vRecordList), 0)
         vRecordList = self.getRecordList(DOMAIN2)
         self.assertEqual(len(vRecordList), MAX_RECORD)
 
-        self.vQueue.delete(DOMAIN2)
+        self.vDQueue.delete(DOMAIN2)
         vRecordList = self.getRecordList(DOMAIN2)
         self.assertEqual(len(vRecordList), 0)
 
 
     def test_DeleteAll(self):
-        self.vQueue.delete()
+        self.vDQueue.delete()
         vRecordList = self.getRecordList()
         self.assertEqual(len(vRecordList), 0)
 

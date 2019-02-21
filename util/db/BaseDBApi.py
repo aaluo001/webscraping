@@ -13,8 +13,6 @@ class BaseDBApi:
         self.vConn = None
         self.vCurs = None
 
-    def connect(self): pass
-
     def close(self):
         try:
             self.vCurs.close()

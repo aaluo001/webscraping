@@ -12,6 +12,7 @@ from util.db.BaseDBApi import BaseDBApi
 
 DBApiError = pymysql.err.DatabaseError
 
+
 class MysqlDBApi(BaseDBApi):
     def __init__(self, vMysqlConf):
         ''' 链接数据库(MySQL)
@@ -29,10 +30,9 @@ class MysqlDBApi(BaseDBApi):
                     'db':      'pywork',
                     'charset': 'UTF8',
                 }
-                db = DBApi(vMysqlConf)
 
                 # 使用MysqlDBApi
-                db.connect()
+                db = DBApi(vMysqlConf)
                 try:
                     db.lock('pytest')
                     db.execute('SELECT * FROM pytest WHERE id=%s AND update_ts=%s', '00001', '2019-01-12 10:10:30')
@@ -43,11 +43,7 @@ class MysqlDBApi(BaseDBApi):
                     db.close()
         '''
         super().__init__()
-        self.vMysqlConf = vMysqlConf
-
-
-    def connect(self):
-        self.vConn = pymysql.connect(**self.vMysqlConf)
+        self.vConn = pymysql.connect(**vMysqlConf)
         self.vCurs = self.vConn.cursor()
         self.setAutoCommit(False)
 
