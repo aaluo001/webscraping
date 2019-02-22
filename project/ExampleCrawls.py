@@ -18,7 +18,8 @@ class ExampleCrawls(BaseProject):
 
     # Ö÷´¦Àí
     def main(self):
-        Spider(vUrl=r'http://example.webscraping.com', \
+        #Spider(vDomain='example.webscraping.com', vReset=True, \
+        Spider(vUrl='http://example.webscraping.com', \
           vMaxDepth=None, vMaxDownload=None, vCache=MongoCache(MONGO_CONF), \
           vAllowRules=[r'/view', r'/index',], \
           vDisallowRules=[r'/trap', r'/user', ] \
